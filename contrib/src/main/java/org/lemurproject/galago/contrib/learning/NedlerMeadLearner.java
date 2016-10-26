@@ -36,7 +36,7 @@ public class NedlerMeadLearner extends Learner {
         this.NMAX = p.get("nmax", this.NMAX);
 
         this.minStepSizes = new HashMap<>();
-        this.minStepSize = p.get("del", 0.02);
+        this.minStepSize = p.get("minStepSize", 0.02);
         this.ftol = p.get("ftol", 0.000001);
         Parameters specialMinStepSizes = Parameters.create();
         if (p.isMap("specialMinStepSize")) {
@@ -54,17 +54,22 @@ public class NedlerMeadLearner extends Learner {
 
         for (int i = 0; i < restarts; i++) {
             final RetrievalModelInstance settingsInstance;
-            if (initialSettings.size() > 0 && i == 0) {
-                settingsInstance = initialSettings.get(i).clone(); // use initialSettings only for first restart
-            } else if (i > 0) {
-                settingsInstance = learntParams.get(learntParams.size() - 1); // restart using previously found minimum as suggested in [1]
+            if (initialSettings.size() > i) {
+                settingsInstance = initialSettings.get(i).clone();
             } else {
                 settingsInstance = generateRandomInitalValues();
             }
             settingsInstance.setAnnotation("name", name + "-restart-" + i);
             try {
-                RetrievalModelInstance s = runNedlerMead(settingsInstance);
-                s.setAnnotation("score", Double.toString(evaluate(s)));
+                double newScore, oldScore;
+                RetrievalModelInstance s = settingsInstance.clone();
+                newScore = evaluate(s);
+                do {
+                    s = runNedlerMead(s);
+                    oldScore = newScore;
+                    newScore = evaluate(s);
+                } while (2.0 * abs(newScore - oldScore) / (abs(newScore) + abs(oldScore) + TINY) >= ftol);
+                s.setAnnotation("score", Double.toString(newScore));
                 learntParams.add(s);
                 synchronized (outputPrintStream) {
                     outputPrintStream.println(s.toString());
