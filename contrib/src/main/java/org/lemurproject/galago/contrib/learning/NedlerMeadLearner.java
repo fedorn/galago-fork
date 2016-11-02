@@ -36,8 +36,8 @@ public class NedlerMeadLearner extends Learner {
         this.NMAX = p.get("nmax", this.NMAX);
 
         this.minStepSizes = new HashMap<>();
-        this.minStepSize = p.get("minStepSize", 0.02);
-        this.ftol = p.get("ftol", 0.000001);
+        this.minStepSize = p.get("minStepSize", 0.05);
+        this.ftol = p.get("ftol", 0.00001);
         Parameters specialMinStepSizes = Parameters.create();
         if (p.isMap("specialMinStepSize")) {
             specialMinStepSizes = p.getMap("specialMinStepSize");
