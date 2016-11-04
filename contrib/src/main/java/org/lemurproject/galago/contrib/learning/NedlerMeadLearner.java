@@ -26,8 +26,8 @@ public class NedlerMeadLearner extends Learner {
     private int NMAX = 5000; // maximum allowed number of metric evaluations
     private static final double TINY = 1.0e-10;
 
-    protected Map<String, Double> minStepSizes;
-    protected double minStepSize; // delta used for simplex initialization. See eq. 10.5.1 from [1].
+    protected Map<String, Double> dels;
+    protected double del; // delta used for simplex initialization. See eq. 10.5.1 from [1].
     protected double ftol;
 
     public NedlerMeadLearner(Parameters p, Retrieval r) throws Exception {
@@ -35,15 +35,15 @@ public class NedlerMeadLearner extends Learner {
 
         this.NMAX = p.get("nmax", this.NMAX);
 
-        this.minStepSizes = new HashMap<>();
-        this.minStepSize = p.get("minStepSize", 0.05);
-        this.ftol = p.get("ftol", 0.00001);
-        Parameters specialMinStepSizes = Parameters.create();
-        if (p.isMap("specialMinStepSize")) {
-            specialMinStepSizes = p.getMap("specialMinStepSize");
+        this.dels = new HashMap<>();
+        this.del = p.get("del", 0.05);
+        this.ftol = p.get("ftol", 0.000001);
+        Parameters specialDels = Parameters.create();
+        if (p.isMap("specialDel")) {
+            specialDels = p.getMap("specialDel");
         }
         for (String param : learnableParameters.getParams()) {
-            minStepSizes.put(param, specialMinStepSizes.get(param, this.minStepSize));
+            dels.put(param, specialDels.get(param, this.del));
         }
     }
 
@@ -123,7 +123,7 @@ public class NedlerMeadLearner extends Learner {
         for (int i = 1; i < ndim + 1; i++) {
             Parameters inst = parameterSettings.toParameters();
             String paramName = params.get(i - 1);
-            inst.set(paramName, inst.getDouble(paramName) + minStepSizes.get(paramName));
+            inst.set(paramName, inst.getDouble(paramName) + dels.get(paramName));
             p.add(inst);
         }
 
