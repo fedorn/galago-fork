@@ -1,16 +1,16 @@
 // BSD License (http://lemurproject.org/galago-license)
 package org.lemurproject.galago.core.parse.stem;
 
-import org.tartarus.snowball.ext.englishStemmer;
+import org.tartarus.snowball.ext.russianStemmer;
 
 /**
  *
- * @author trevor
- * sjh: modified to accept numbered documents as required.
+ * @author fedorn
+ * Use with: --stemmer+porter --stemmerClass/porter=org.lemurproject.galago.core.parse.stem.RussianStemmer
  */
-public class Porter2Stemmer extends Stemmer {
+public class RussianStemmer extends Stemmer {
 
-  englishStemmer stemmer = new englishStemmer();
+  russianStemmer stemmer = new russianStemmer();
 
   @Override
   protected String stemTerm(String term) {
