@@ -159,6 +159,9 @@ public class PRMS2Traversal extends Traversal {
 
           Node termScore = new Node(scorerType);
           termScore.getNodeParameters().set("lengths", field);
+          if (queryParameters.containsKey("mu-" + field)) {
+            termScore.getNodeParameters().set("mu", queryParameters.getDouble("mu-" + field));
+          }
           termScore.addChild(fieldLenNodes.get(field).clone());
           termScore.addChild(termFieldCounts);
           termFields.add(termScore);
