@@ -154,8 +154,8 @@ public class FieldedSequentialDependenceTraversal extends MLMTraversal {
             }
             Node orderedBigramScore = new Node(scorerType);
             orderedBigramScore.getNodeParameters().set("lengths", field);
-            if (qp.containsKey("mu-" + field)) {
-                orderedBigramScore.getNodeParameters().set("mu", qp.getDouble("mu-" + field));
+            if (globals.containsKey("mu-" + field)) {
+                orderedBigramScore.getNodeParameters().set("mu", globals.getDouble("mu-" + field));
             }
             orderedBigramScore.addChild(fieldStats.getFieldLenNodes().get(field).clone());
             orderedBigramScore.addChild(orderedOperationNode);
@@ -163,8 +163,8 @@ public class FieldedSequentialDependenceTraversal extends MLMTraversal {
 
             Node unorderedBigramScore = new Node(scorerType);
             unorderedBigramScore.getNodeParameters().set("lengths", field);
-            if (qp.containsKey("mu-" + field)) {
-                unorderedBigramScore.getNodeParameters().set("mu", qp.getDouble("mu-" + field));
+            if (globals.containsKey("mu-" + field)) {
+                unorderedBigramScore.getNodeParameters().set("mu", globals.getDouble("mu-" + field));
             }
             unorderedBigramScore.addChild(fieldStats.getFieldLenNodes().get(field).clone());
             unorderedBigramScore.addChild(unorderedOperationNode);

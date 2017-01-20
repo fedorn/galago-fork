@@ -119,8 +119,8 @@ public class MLMTraversal extends Traversal {
 
             Node termScore = new Node(scorerType);
             termScore.getNodeParameters().set("lengths", field);
-            if (queryParameters.containsKey("mu-" + field)) {
-                termScore.getNodeParameters().set("mu", queryParameters.getDouble("mu-" + field));
+            if (globals.containsKey("mu-" + field)) {
+                termScore.getNodeParameters().set("mu", globals.getDouble("mu-" + field));
             }
             termScore.addChild(fieldStats.fieldLenNodes.get(field).clone());
             termScore.addChild(termFieldCounts);
