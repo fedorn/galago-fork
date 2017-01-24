@@ -111,8 +111,7 @@ public class NedlerMeadLearner extends Learner {
 
     public RetrievalModelInstance runNedlerMead(RetrievalModelInstance parameterSettings) throws Exception {
 
-        double best = this.evaluate(parameterSettings);
-        outputTraceStream.println(String.format("Initial parameter weights: %s Metric: %f. Starting optimization...", parameterSettings.toParameters().toString(), best));
+        outputTraceStream.println(String.format("Initial parameter weights: %s Metric: %f. Starting optimization...", parameterSettings.toParameters().toString(), this.evaluate(parameterSettings)));
 
         List<String> params = new ArrayList<String>(this.learnableParameters.getParams());
 
@@ -155,7 +154,7 @@ public class NedlerMeadLearner extends Learner {
             double rtol = 2.0 * abs(y[ihi] - y[ilo]) / (abs(y[ihi]) + abs(y[ilo]) + TINY);
             if (rtol < ftol) {
                 outputTraceStream.println(String.format("Reached ftol... Done optimizing."));
-                outputTraceStream.println(String.format("Best metric achieved: %s", best));
+                outputTraceStream.println(String.format("Best metric achieved: %s", y[ihi]));
                 outputTraceStream.flush();
                 return new RetrievalModelInstance(this.learnableParameters, p.get(ihi));
             }
