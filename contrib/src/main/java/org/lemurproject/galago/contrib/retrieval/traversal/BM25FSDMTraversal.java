@@ -105,7 +105,7 @@ public class BM25FSDMTraversal extends Traversal {
       for (int i = 0; i < children.size(); i++) {
         Node termNode = children.get(i);
         double idf = getIDF(termNode);
-        Node termCombiner = createFieldsOfTerm(termNode, smoothing, cumulativeWeights, i, weights.get("K", 0.5),
+        Node termCombiner = createFieldsOfTerm(termNode, smoothing, cumulativeWeights, i, weights.get("K", queryParams.get("K", 0.5)),
                 idf, queryParams);
         uniRoot.addChild(termCombiner);
         uniRoot.getNodeParameters().set("idf" + i, idf);
@@ -113,12 +113,17 @@ public class BM25FSDMTraversal extends Traversal {
 
       int windowLimit = (int) queryParams.get("windowLimit", windowLimitDefault);
 
+      rootP = new NodeParameters();
+      rootP.set("K", weights.get("K", queryParams.get("K", 0.5)));
       Node odRoot = new Node("bm25fcomb", rootP);
       odRoot.getNodeParameters().set("norm", false);
 
+      rootP = new NodeParameters();
+      rootP.set("K", weights.get("K", queryParams.get("K", 0.5)));
       Node uwRoot = new Node("bm25fcomb", rootP);
       uwRoot.getNodeParameters().set("norm", false);
 
+      int bigramI = 0;
       for (int n = 2; n <= windowLimit; n++) {
         for (int i = 0; i < (children.size() - n + 1); i++) {
           List<Node> seq = children.subList(i, i + n);
@@ -131,14 +136,17 @@ public class BM25FSDMTraversal extends Traversal {
           double odIdf = getIDF(odNode);
           double uwwIdf = getIDF(uwwNode);
 
-          Node odCombiner = createFieldsOfBigram(seq, smoothing, cumulativeWeights, i, weights.get("K", 0.5),
+          Node odCombiner = createFieldsOfBigram(seq, smoothing, cumulativeWeights, i, weights.get("K", queryParams.get("K", 0.5)),
                   odIdf, queryParams, true);
-          Node uwwCombiner = createFieldsOfBigram(seq, smoothing, cumulativeWeights, i, weights.get("K", 0.5),
+          Node uwwCombiner = createFieldsOfBigram(seq, smoothing, cumulativeWeights, i, weights.get("K", queryParams.get("K", 0.5)),
                   uwwIdf, queryParams, false);
 
 
           odRoot.addChild(odCombiner);
+          odRoot.getNodeParameters().set("idf" + bigramI, odIdf);
           uwRoot.addChild(uwwCombiner);
+          uwRoot.getNodeParameters().set("idf" + bigramI, uwwIdf);
+          ++bigramI;
         }
       }
 
