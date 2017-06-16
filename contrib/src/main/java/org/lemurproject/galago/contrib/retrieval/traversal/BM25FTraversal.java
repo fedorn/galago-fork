@@ -77,7 +77,7 @@ public class BM25FTraversal extends Traversal {
       for (int i = 0; i < children.size(); i++) {
         Node termNode = children.get(i);
         double idf = getIDF(termNode);
-        Node termCombiner = createFieldsOfTerm(termNode, smoothing, cumulativeWeights, i, weights.get("K", 0.5),
+        Node termCombiner = createFieldsOfTerm(termNode, smoothing, cumulativeWeights, i, weights.get("K", queryParams.get("K", 0.5)),
                 idf, queryParams);
         newRoot.addChild(termCombiner);
         newRoot.getNodeParameters().set("idf" + i, idf);
