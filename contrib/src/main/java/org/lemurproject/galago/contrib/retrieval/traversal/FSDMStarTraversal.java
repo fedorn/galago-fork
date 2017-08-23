@@ -1,6 +1,7 @@
 package org.lemurproject.galago.contrib.retrieval.traversal;
 
 import org.apache.commons.lang.math.NumberUtils;
+import org.lemurproject.galago.core.index.stats.NodeStatistics;
 import org.lemurproject.galago.core.retrieval.Retrieval;
 import org.lemurproject.galago.core.retrieval.query.Node;
 import org.lemurproject.galago.core.retrieval.query.NodeParameters;
@@ -12,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * For queries like "#fieldedsdm:uw.attributes.width=8:uw.width=4(president barack obama)"
+ * For queries like "#fsdmstar:uw.attributes.width=8:uw.width=4(president barack obama)"
  *
  * One should specify field weights for unigrams and bigrams as Galago parameters with names:
  *   --uni-<field name>
@@ -25,7 +26,7 @@ import java.util.List;
  *
  * @author Nikita Zhiltsov
  */
-public class FieldedSequentialDependenceTraversal extends MLMTraversal {
+public class FSDMStarTraversal extends MLMTraversal {
 
     public static final String ORDERED_FIELD_PREFIX = "od-";
     public static final String UNWINDOW_FIELD_PREFIX = "uww-";
@@ -40,7 +41,7 @@ public class FieldedSequentialDependenceTraversal extends MLMTraversal {
     private final String uwOp;
     private final int uwWidth;
 
-    public FieldedSequentialDependenceTraversal(Retrieval retrieval) {
+    public FSDMStarTraversal(Retrieval retrieval) {
         super(retrieval);
 
         unigramDefault = globals.get("uniw", 0.8);
@@ -58,7 +59,7 @@ public class FieldedSequentialDependenceTraversal extends MLMTraversal {
 
     @Override
     public Node afterNode(Node original, Parameters qp) throws Exception {
-        if (original.getOperator().equals("fieldedsdm")) {
+        if (original.getOperator().equals("fsdmstar")) {
             return buildSDMNode(original, qp);
         } else {
             return original;
@@ -77,6 +78,71 @@ public class FieldedSequentialDependenceTraversal extends MLMTraversal {
         addBigramNodes(original, qp, np, children, sdmWeights, sdmNodes);
 
         return new Node("combine", sdmWeights, sdmNodes, original.getPosition());
+    }
+
+    @Override
+    protected Node getUnigramNode(Node original, Parameters queryParameters, String term) throws Exception {
+        String scorerType = queryParameters.get("scorer", globals.get("scorer", "dirichlet"));
+
+        ArrayList<Node> termFields = new ArrayList<Node>();
+        NodeParameters nodeweights = new NodeParameters();
+        Parameters availableParts = this.retrieval.getAvailableParts();
+        int i = 0;
+        double normalizer = 0.0;
+        for (String field : fields) {
+            Node termFieldCounts, termExtents;
+
+            // if we have access to the correct field-part:
+            if (availableParts.containsKey("field.krovetz." + field) ||
+                    availableParts.containsKey("field.porter." + field) ||
+                    availableParts.containsKey("field." + field)) {
+                NodeParameters par1 = new NodeParameters();
+                par1.set("default", term);
+                termFieldCounts = TextPartAssigner.assignFieldPart(new Node("counts", par1, new ArrayList()), availableParts, field);
+            } else {
+                // otherwise use an #inside op
+                NodeParameters par1 = new NodeParameters();
+                par1.set("default", term);
+                termExtents = new Node("extents", par1, new ArrayList());
+                termExtents = TextPartAssigner.assignPart(termExtents, globals, availableParts);
+
+                termFieldCounts = new Node("inside");
+                termFieldCounts.addChild(StructuredQuery.parse("#extents:part=extents:" + field + "()"));
+                termFieldCounts.addChild(termExtents);
+            }
+
+//            double fieldWeight = 0.0;
+//            if (fieldWeights != null && fieldWeights.containsKey(UNIGRAM_FIELD_PREFIX + field)) {
+//                fieldWeight = fieldWeights.getDouble(UNIGRAM_FIELD_PREFIX + field);
+//            } else {
+//                fieldWeight = queryParameters.get(UNIGRAM_FIELD_PREFIX + field, 0.0);
+//            }
+
+            NodeStatistics ns = retrieval.getNodeStatistics(termFieldCounts);
+            double fieldWeight = (double) ns.nodeFrequency / (double) fieldStats.getFieldStats().get(field).collectionLength; // P(t|F_j)
+
+            nodeweights.set(Integer.toString(i), fieldWeight);
+            normalizer += fieldWeight;
+
+            Node termScore = new Node(scorerType);
+            termScore.getNodeParameters().set("lengths", field);
+            if (globals.containsKey("mu-" + field)) {
+                termScore.getNodeParameters().set("mu", globals.getDouble("mu-" + field));
+            }
+            termScore.addChild(fieldStats.getFieldLenNodes().get(field).clone());
+            termScore.addChild(termFieldCounts);
+            termFields.add(termScore);
+            i++;
+        }
+        // normalize field weights
+        if (normalizer != 0) {
+            for (i = 0; i < fields.size(); i++) {
+                String key = Integer.toString(i);
+                nodeweights.set(key, nodeweights.getDouble(key) / normalizer);
+            }
+        }
+
+        return new Node("wsum", nodeweights, termFields);
     }
 
     protected void addBigramNodes(Node original, Parameters qp, NodeParameters np, List<Node> children, NodeParameters sdmWeights, List<Node> sdmNodes) throws Exception {
@@ -107,44 +173,30 @@ public class FieldedSequentialDependenceTraversal extends MLMTraversal {
         double odNormalizer = 0.0;
         NodeParameters unwindowFieldWeights = new NodeParameters();
         double uwwNormalizer = 0.0;
-        for (int i = 0; i < fields.size(); i++) {
-            double odFieldWeight = 0.0;
-            double uwdFieldWeight = 0.0;
-            if (this.fieldWeights != null && this.fieldWeights.containsKey(ORDERED_FIELD_PREFIX + fields.get(i))) {
-                odFieldWeight = this.fieldWeights.getDouble(ORDERED_FIELD_PREFIX + fields.get(i));
-            } else {
-                //odFieldWeight = qp.get(ORDERED_FIELD_PREFIX + fields.get(i), 0.0);
-		odFieldWeight = qp.get(ORDERED_FIELD_PREFIX + fields.get(i), 1.0);
-            }
-            if (this.fieldWeights != null && this.fieldWeights.containsKey(UNWINDOW_FIELD_PREFIX + fields.get(i))) {
-                uwdFieldWeight = this.fieldWeights.getDouble(UNWINDOW_FIELD_PREFIX + fields.get(i));
-            } else {
-                //uwdFieldWeight = qp.get(UNWINDOW_FIELD_PREFIX + fields.get(i), 0.0);
-		uwdFieldWeight = qp.get(UNWINDOW_FIELD_PREFIX + fields.get(i), 1.0);
-            }
-            orderedFieldWeights.set(Integer.toString(i), odFieldWeight);
-            odNormalizer += odFieldWeight;
-            unwindowFieldWeights.set(Integer.toString(i), uwdFieldWeight);
-            uwwNormalizer += uwdFieldWeight;
-        }
-        // normalize field weights
-        if (odNormalizer != 0) {
-            for (int i = 0; i < fields.size(); i++) {
-                String key = Integer.toString(i);
-                orderedFieldWeights.set(key, orderedFieldWeights.getDouble(key) / odNormalizer);
-            }
-        }
-        if (uwwNormalizer != 0) {
-            for (int i = 0; i < fields.size(); i++) {
-                String key = Integer.toString(i);
-                unwindowFieldWeights.set(key, unwindowFieldWeights.getDouble(key) / uwwNormalizer);
-            }
-        }
+//        for (int i = 0; i < fields.size(); i++) {
+//            double odFieldWeight = 0.0;
+//            double uwdFieldWeight = 0.0;
+//            if (this.fieldWeights != null && this.fieldWeights.containsKey(ORDERED_FIELD_PREFIX + fields.get(i))) {
+//                odFieldWeight = this.fieldWeights.getDouble(ORDERED_FIELD_PREFIX + fields.get(i));
+//            } else {
+//                odFieldWeight = qp.get(ORDERED_FIELD_PREFIX + fields.get(i), 0.0);
+//            }
+//            if (this.fieldWeights != null && this.fieldWeights.containsKey(UNWINDOW_FIELD_PREFIX + fields.get(i))) {
+//                uwdFieldWeight = this.fieldWeights.getDouble(UNWINDOW_FIELD_PREFIX + fields.get(i));
+//            } else {
+//                uwdFieldWeight = qp.get(UNWINDOW_FIELD_PREFIX + fields.get(i), 0.0);
+//            }
+//            orderedFieldWeights.set(Integer.toString(i), odFieldWeight);
+//            odNormalizer += odFieldWeight;
+//            unwindowFieldWeights.set(Integer.toString(i), uwdFieldWeight);
+//            uwwNormalizer += uwdFieldWeight;
+//        }
 
         String scorerType = qp.get("scorer", globals.get("scorer", "dirichlet"));
         List<Node> orderedBigramFields = new ArrayList<Node>();
         List<Node> unorderedBigramFields = new ArrayList<Node>();
-        for (String field : fields) {
+        for (int i = 0; i < fields.size(); i++) {
+            String field = fields.get(i);
             Node orderedOperationNode = new Node(odOp, new NodeParameters(np.get("od.width", odWidth)));
             long unorderedWindow = np.get(("uw." + field + ".width"), np.get("uw.width", uwWidth));
             Node unorderedOperationNode = new Node(uwOp, new NodeParameters(unorderedWindow));
@@ -154,6 +206,17 @@ public class FieldedSequentialDependenceTraversal extends MLMTraversal {
                 orderedOperationNode.addChild(TextPartAssigner.assignFieldPart(StructuredQuery.parse("#extents:" + inFieldTerm + "()"), this.retrieval.getAvailableParts(), field));
                 unorderedOperationNode.addChild(TextPartAssigner.assignFieldPart(StructuredQuery.parse("#extents:" + inFieldTerm + "()"), this.retrieval.getAvailableParts(), field));
             }
+
+            NodeStatistics odNs = retrieval.getNodeStatistics(orderedOperationNode);
+            double odFieldWeight = (double) odNs.nodeFrequency / (double) fieldStats.getFieldStats().get(field).collectionLength; // P(t|F_j)
+            orderedFieldWeights.set(Integer.toString(i), odFieldWeight);
+            odNormalizer += odFieldWeight;
+
+            NodeStatistics uwdNs = retrieval.getNodeStatistics(unorderedOperationNode);
+            double uwdFieldWeight = (double) uwdNs.nodeFrequency / (double) fieldStats.getFieldStats().get(field).collectionLength; // P(t|F_j)
+            unwindowFieldWeights.set(Integer.toString(i), uwdFieldWeight);
+            uwwNormalizer += uwdFieldWeight;
+
             Node orderedBigramScore = new Node(scorerType);
             orderedBigramScore.getNodeParameters().set("lengths", field);
             if (globals.containsKey("mu-" + field)) {
@@ -171,6 +234,30 @@ public class FieldedSequentialDependenceTraversal extends MLMTraversal {
             unorderedBigramScore.addChild(fieldStats.getFieldLenNodes().get(field).clone());
             unorderedBigramScore.addChild(unorderedOperationNode);
             unorderedBigramFields.add(unorderedBigramScore);
+        }
+
+        // normalize field weights
+        if (odNormalizer != 0) {
+            for (int i = 0; i < fields.size(); i++) {
+                String key = Integer.toString(i);
+                orderedFieldWeights.set(key, orderedFieldWeights.getDouble(key) / odNormalizer);
+            }
+        } else {
+            for (int i = 0; i < fields.size(); i++) {
+                String key = Integer.toString(i);
+                orderedFieldWeights.set(key, 1.0);
+            }
+        }
+        if (uwwNormalizer != 0) {
+            for (int i = 0; i < fields.size(); i++) {
+                String key = Integer.toString(i);
+                unwindowFieldWeights.set(key, unwindowFieldWeights.getDouble(key) / uwwNormalizer);
+            }
+        } else {
+            for (int i = 0; i < fields.size(); i++) {
+                String key = Integer.toString(i);
+                unwindowFieldWeights.set(key, 1.0);
+            }
         }
 
         Node orderedNode = new Node("wsum", orderedFieldWeights, orderedBigramFields);
