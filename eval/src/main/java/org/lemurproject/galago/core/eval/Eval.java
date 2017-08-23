@@ -215,7 +215,7 @@ public class Eval extends AppFunction {
     String ln = p.get("ln", " ");     // latex : " \\\\ \\hline"
     String sig = p.get("sig", "*");   // latex : " ^{+} "
     String neg = p.get("negsig", ""); // latex : " ^{-} "
-    String prec = p.get("precision", "3");
+    String prec = Integer.toString(p.get("precision", 4));
 
     double thresh = p.get("thresh", 0.05);
 
