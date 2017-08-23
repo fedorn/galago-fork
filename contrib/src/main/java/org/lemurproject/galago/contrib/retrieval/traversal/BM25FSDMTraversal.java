@@ -111,6 +111,10 @@ public class BM25FSDMTraversal extends Traversal {
         uniRoot.getNodeParameters().set("idf" + i, idf);
       }
 
+      if (children.size() == 1) {
+        return uniRoot;
+      }
+
       int windowLimit = (int) queryParams.get("windowLimit", windowLimitDefault);
 
       rootP = new NodeParameters();
