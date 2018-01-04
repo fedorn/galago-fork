@@ -5,6 +5,8 @@ import org.lemurproject.galago.utility.json.JSONParser;
 import org.lemurproject.galago.utility.json.JSONUtil;
 import org.lemurproject.galago.utility.tools.Arguments;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.*;
 import java.util.*;
 import java.util.logging.Level;
@@ -37,6 +39,7 @@ public class Parameters implements Serializable, Map<String,Object> {
     _backoff = null;
   }
 
+  @Nonnull
   public static Parameters create() {
     return new Parameters();
   }
@@ -46,6 +49,7 @@ public class Parameters implements Serializable, Map<String,Object> {
     return create();
   }
 
+  @Nonnull
   public static Parameters parseMap(Map<String,String> map) {
     Parameters self = Parameters.create();
     
@@ -56,25 +60,30 @@ public class Parameters implements Serializable, Map<String,Object> {
     return self;
   }
 
+  @Nonnull
   @SuppressWarnings("unchecked")
   public static <T> Parameters wrap(Map<String, T> data) {
     return new Parameters((Map<String, Object>) data);
   }
 
+  @Nonnull
 	public static Parameters parseFile(File f) throws IOException {
     JSONParser jp = new JSONParser(new InputStreamReader(StreamCreator.openInputStream(f)), f.getPath());
     return jp.parse();
   }
   
+  @Nonnull
   public static Parameters parseFile(String path) throws IOException {
     return parseFile(new File(path));
   }
   
+  @Nonnull
   public static Parameters parseString(String data) throws IOException {
     JSONParser jp = new JSONParser(new StringReader(data), "<from string>");
     return jp.parse();
   }
   
+  @Nonnull
   public static Parameters parseStringOrDie(String data) {
     try {
       JSONParser jp = new JSONParser(new StringReader(data), "<from string>");
@@ -84,20 +93,24 @@ public class Parameters implements Serializable, Map<String,Object> {
     }
   }
 
+  @Nonnull
   public static Parameters parseReader(Reader reader) throws IOException {
     JSONParser jp = new JSONParser(reader, "<from reader>");
     return jp.parse();
   }
   
+  @Nonnull
   public static Parameters parseStream(InputStream iStream) throws IOException {
     JSONParser jp = new JSONParser(new InputStreamReader(iStream), "<from stream>");
     return jp.parse();
   }
   
+  @Nonnull
   public static Parameters parseBytes(byte[] data) throws IOException {
     return parseStream(new ByteArrayInputStream(data));
   }
 
+  @Nonnull
   public static Parameters parseArray(Object... args) {
     if(args.length % 2 == 1) {
       throw new IllegalArgumentException("Uneven number of parameters in vararg constructor.");
@@ -118,7 +131,7 @@ public class Parameters implements Serializable, Map<String,Object> {
    * Ensures items are not shared across parameter objects -- identical keys can
    * be overwritten -- Backoff parameters are copied.
    */
-  public void copyFrom(Parameters other) {
+  public void copyFrom(@Nonnull Parameters other) {
     try {
       JSONParser jp = new JSONParser(new StringReader(other.toString()), "<copyFrom>");
       jp.parse(this);
@@ -132,7 +145,7 @@ public class Parameters implements Serializable, Map<String,Object> {
    * To ensure items are not shared across parameter objects -- identical keys
    * will be overwritten -- Backoff parameters are copied.
    */
-  public void copyTo(Parameters other) {
+  public void copyTo(@Nonnull Parameters other) {
     try {
       JSONParser jp = new JSONParser(new StringReader(toString()), "<copyTo>");
       jp.parse(other);
@@ -207,7 +220,8 @@ public class Parameters implements Serializable, Map<String,Object> {
     }
   }
   
-  private Object copyValue(Object input) {
+  @Nonnull
+  private Object copyValue(@Nonnull Object input) {
     if(input == null) {
       throw new IllegalArgumentException("null given to copyValue()");
     } else if(input instanceof List) {
@@ -226,6 +240,7 @@ public class Parameters implements Serializable, Map<String,Object> {
     }
   }
   
+  @Nonnull
 	@Override
   public Parameters clone() {
     Parameters copy = Parameters.create();
@@ -248,6 +263,7 @@ public class Parameters implements Serializable, Map<String,Object> {
   }
 
   // Getters
+  @Nonnull
   public Set<String> getKeys() {
     if (_backoff != null) {
       // have to duplicate this list to get an AddAll function (immutable set)
@@ -258,11 +274,13 @@ public class Parameters implements Serializable, Map<String,Object> {
     return _data.keySet();
   }
 
+  @Nonnull
   public <T> List<T> getList(String key, Class<T> klazz) {
     assert(klazz != null);
     return (List<T>) getList(key);
   }
 
+  @Nonnull
   public List getList(String key) {
     Object val = getOrThrow(key);
     if (val instanceof List) {
@@ -272,21 +290,26 @@ public class Parameters implements Serializable, Map<String,Object> {
     }
   }
 
+  @Nonnull
   public List getAsList(String key) {
     Object val = get(key);
     if (val == null || val instanceof NullMarker) {
       return Collections.EMPTY_LIST;
     } else if (val instanceof List) {
       return (List) val;
+    } else if (val instanceof Collection) {
+      return new ArrayList<Object>((Collection) val);
     } else {
       return Arrays.asList(val);
     }
   }
 
+  @Nonnull
   public <T> List<T> getAsList(String key, Class<T> ignored) {
     return (List<T>) getAsList(key);
   }
 
+  @Nonnull
   public Parameters getMap(String key) {
     Object val = getOrThrow(key);
     if(val instanceof Parameters) {
@@ -301,6 +324,7 @@ public class Parameters implements Serializable, Map<String,Object> {
    * @param key The key to look for.
    * @return the value of key as a string.
    */
+  @Nonnull
   public String getAsString(String key) {
     if(isString(key)) {
       return getString(key);
@@ -319,6 +343,7 @@ public class Parameters implements Serializable, Map<String,Object> {
    * @param key key object
    * @return note that string values may be null
    */
+  @Nullable
   public String getString(String key) {
     Object val = get(key);
     if(val instanceof NullMarker) {
@@ -382,6 +407,27 @@ public class Parameters implements Serializable, Map<String,Object> {
     return getInt(key);
   }
 
+  public double getAsDouble(String key) {
+    Object val = getOrThrow(key);
+    if(val instanceof Double) {
+      return (Double) val;
+    } else if(val instanceof Float) {
+      return (Float) val;
+    } else if(val instanceof Long) {
+      return (Long) val;
+    } else if(val instanceof Integer) {
+      return (Integer) val;
+    } else if (val instanceof String) {
+      try {
+        return Double.parseDouble((String) val);
+      } catch (NumberFormatException nfe) {
+        throw new IllegalArgumentException("Key "+key+" does not exist as a Double in parameters object, and could not be parsed as such: "+val, nfe);
+      }
+    } else {
+      throw new IllegalArgumentException("Key " + key + " does not exist as Double/Long in parameters object, instead found " + val);
+    }
+  }
+
   public double getDouble(String key) {
     Object val = getOrThrow(key);
     if(val instanceof Double) {
@@ -420,6 +466,7 @@ public class Parameters implements Serializable, Map<String,Object> {
     return getBoolean(key);
   }
 
+  @Nullable
   public Parameters getBackoff() {
     return _backoff;
   }
@@ -582,9 +629,13 @@ public class Parameters implements Serializable, Map<String,Object> {
         } else if(isLong(key)) {
           builder.append(getLong(key));
         } else if(isDouble(key)) {
-          builder.append(getDouble(key));
+          encodeDouble(builder, key);
         } else if(isString(key) || isMap(key) || isList(key)) {
           builder.append(emitComplex(get(key)));
+        } else if (get(key) instanceof Collection) {
+          // Handle any collections (in case someone gives us a Set, for instance.
+          // Again, this breaks the perfect symmetry assumption but it prevents us from crashing on reasonable inputs.
+          builder.append(emitComplex(getAsList(key)));
         } else {
           throw new IllegalArgumentException("Unknown object kind: "+get(key).getClass()+" {"+key+": "+get(key)+"}");
         }
@@ -595,6 +646,17 @@ public class Parameters implements Serializable, Map<String,Object> {
 
     builder.append(" }");
     return builder.toString();
+  }
+
+  private void encodeDouble(StringBuilder builder, String key) {
+    double value = getDouble(key);
+    // Encode NaN and -Infinity and +Infinity as string representations.
+    // This breaks the everything in goes out kind of deal, but prevents us from outputting data we can't read.
+    if(Double.isNaN(value) || Double.isInfinite(value)) {
+      builder.append("\"").append(value).append("\"");
+    } else {
+      builder.append(getDouble(key));
+    }
   }
   
   public String toPrettyString() {
@@ -650,13 +712,17 @@ public class Parameters implements Serializable, Map<String,Object> {
         } else if(p.isLong(key)) {
           builder.append(p.getLong(key));
         } else if(p.isDouble(key)) {
-          builder.append(p.getDouble(key));
+          p.encodeDouble(builder, key);
         } else if(p.isString(key)) {
           builder.append(toPrettyString(p.getString(key), internalPrefix, false));
         } else if(p.isMap(key)) {
           builder.append(toPrettyString(p.getMap(key), internalPrefix, false));
         } else if(p.isList(key)) {
           builder.append(toPrettyString(p.getList(key), internalPrefix, false));
+        } else if(p.get(key) instanceof Collection) {
+          // Handle any collections (in case someone gives us a Set, for instance.
+          // Again, this breaks the perfect symmetry assumption but it prevents us from crashing on reasonable inputs.
+          builder.append(toPrettyString(p.getAsList(key), internalPrefix, false));
         } else throw new UnsupportedOperationException(key+"="+p.get(key));
       }
 
@@ -731,6 +797,7 @@ public class Parameters implements Serializable, Map<String,Object> {
     return null;
   }
 
+  @Nonnull
   public Object getOrThrow(String key) {
     if(_data.containsKey(key)) {
       return _data.get(key);
