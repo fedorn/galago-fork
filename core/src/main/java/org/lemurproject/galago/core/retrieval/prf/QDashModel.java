@@ -53,6 +53,10 @@ public class QDashModel implements ExpansionModel {
       logger.info("fbOrigWeight is invalid (1.0)");
       return root;
     }
+    if (!weighedTermsByQuery.containsKey(queryParameters.getString("number"))) {
+      logger.info("No expansion terms for query " + queryParameters.getString("number"));
+      return root;
+    }
     List<WeightedTerm> weighedTerms = weighedTermsByQuery.get(queryParameters.getString("number")).subList(0, nu);
     Node expNode = generateExpansionQuery(weighedTerms);
     Node rm3 = new Node("combine");
