@@ -36,6 +36,9 @@ import java.util.List;
  * term weight. - K : A field/query independent tunable parameter. Used for
  * smoothing term scores.
  *
+ * Note by fedorn: This model is from "Microsoft Cambridge at TREC 13: Web and Hard Tracks",
+ * and not from "Simple BM25 Extension to Miltiple Weighted Fields"
+ *
  *
  * @author irmarc
  */

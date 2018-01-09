@@ -14,7 +14,13 @@ import org.lemurproject.galago.utility.Parameters;
 import java.util.ArrayList;
 import java.util.List;
 
-@ImplementsOperator("bm25f")
+/**
+ * Original BM25F from "Simple BM25 Extension to Miltiple Weighted Fields"
+ *
+ * @author fedorn
+ */
+
+@ImplementsOperator("origbm25f")
 public class OrigBM25FTraversal extends Traversal {
 
   List<String> fieldList;
