@@ -13,18 +13,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * For queries like "#fsdmstar:uw.attributes.width=8:uw.width=4(president barack obama)"
+ * FSDM with PRMS weighing of fields
  *
- * One should specify field weights for unigrams and bigrams as Galago parameters with names:
- *   --uni-<field name>
- *   --od-<field name>
- *   --uww-<field name>
- *
- * The total number of such parameters should be 3*Number of fields.
- *
- * Specify the names of fields to be used via a --fields parameter.
- *
- * @author Nikita Zhiltsov
+ * @author fedorn
  */
 public class FSDMStarTraversal extends MLMTraversal {
 
