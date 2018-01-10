@@ -88,7 +88,7 @@ public class OrigBM25FTraversal extends Traversal {
 
     // Use a straight weighting - no weight normalization
     Node combiner = new Node("origbm25ffieldcombine", new ArrayList<Node>());
-    combiner.getNodeParameters().set("norm", false);
+    combiner.getNodeParameters().set("norm", false); // To prevent normalization of weights, important parameter!
     combiner.getNodeParameters().set("K", K);
     combiner.getNodeParameters().set("b", b);
 

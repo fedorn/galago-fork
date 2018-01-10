@@ -78,6 +78,7 @@ public class TranslationModelTraversal extends Traversal {
     // Use a straight weighting - no weight normalization
     Node combiner = new Node("tmtermcombine", new ArrayList<Node>());
     combiner.getNodeParameters().set("background", background);
+    combiner.getNodeParameters().set("norm", false); // To prevent normalization of weights, important parameter!
 
 //    combiner.getNodeParameters().set("0", 1.0);
 //    combiner.addChild(termNode);
