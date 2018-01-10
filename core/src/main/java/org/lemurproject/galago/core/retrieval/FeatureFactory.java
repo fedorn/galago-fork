@@ -62,6 +62,7 @@ public class FeatureFactory {
     {LogProbNotIterator.class.getName(), "logprobnot"},
     {OrigBM25FCombinationIterator.class.getName(), "origbm25fcomb"},
     {OrigBM25FFieldCombinationIterator.class.getName(), "origbm25ffieldcombine"},
+    {TranslationModelCombinationIterator.class.getName(), "tmtermcombine"},
 
           // count -> score iterators
     // Scorers can be named directly as nodes
