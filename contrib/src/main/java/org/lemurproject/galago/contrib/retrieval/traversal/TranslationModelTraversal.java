@@ -12,6 +12,7 @@ import org.lemurproject.galago.utility.Parameters;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 /**
  * Translation Model from "Generalizing Translation Models in the Probabilistic Relevance Framework", Eqs. (19)-(21)
@@ -22,6 +23,7 @@ import java.util.List;
 @ImplementsOperator("tm")
 public class TranslationModelTraversal extends Traversal {
 
+  private static final Logger logger = Logger.getLogger("TranslationModel");
   Parameters allRelatedTerms;
   Retrieval retrieval;
 
@@ -47,12 +49,13 @@ public class TranslationModelTraversal extends Traversal {
         np.set("default", term);
         Node termCountsNode = new Node("counts", np);
 
-        if (allRelatedTerms.containsKey(term)) {
+        if (allRelatedTerms.containsKey(term.toLowerCase())) {
           double background = getBackground(termCountsNode);
           Node termCombiner = createExpansionOfTerm(termCountsNode, allRelatedTerms.getList(term.toLowerCase(), List.class),
                   background, queryParams.getDouble("expWeight"));
           newRoot.addChild(termCombiner);
         } else {
+          logger.info("no expansion terms for: " + term);
           newRoot.addChild(termNode);
         }
       }
