@@ -49,7 +49,7 @@ public class TranslationModelTraversal extends Traversal {
 
         if (allRelatedTerms.containsKey(term)) {
           double background = getBackground(termCountsNode);
-          Node termCombiner = createExpansionOfTerm(termCountsNode, allRelatedTerms.getList(term, List.class),
+          Node termCombiner = createExpansionOfTerm(termCountsNode, allRelatedTerms.getList(term.toLowerCase(), List.class),
                   background, queryParams.getDouble("expWeight"));
           newRoot.addChild(termCombiner);
         } else {
