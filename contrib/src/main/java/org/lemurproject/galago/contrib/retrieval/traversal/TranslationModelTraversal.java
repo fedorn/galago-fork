@@ -49,8 +49,8 @@ public class TranslationModelTraversal extends Traversal {
 
         if (allRelatedTerms.containsKey(term)) {
           double background = getBackground(termCountsNode);
-          Node termCombiner = createExpansionOfTerm(termCountsNode,
-                  allRelatedTerms.getList(term, List.class), background);
+          Node termCombiner = createExpansionOfTerm(termCountsNode, allRelatedTerms.getList(term, List.class),
+                  background, queryParams.getDouble("expWeight"));
           newRoot.addChild(termCombiner);
         } else {
           newRoot.addChild(termNode);
@@ -72,7 +72,7 @@ public class TranslationModelTraversal extends Traversal {
     return background;
   }
 
-  private Node createExpansionOfTerm(Node termNode, List<List> relatedTerms, double background) throws Exception {
+  private Node createExpansionOfTerm(Node termNode, List<List> relatedTerms, double background, double expWeight) {
     String term = termNode.getDefaultParameter();
 
     // Use a straight weighting - no weight normalization
@@ -106,8 +106,7 @@ public class TranslationModelTraversal extends Traversal {
       np = new NodeParameters();
       scoreNode = new Node("origbm25field", np); // not related to bm25f, simply returns count as a score
       scoreNode.addChild(relatedTermNode);
-      combiner.getNodeParameters().set(Integer.toString(combiner.getInternalNodes().size()),
-              score);
+      combiner.getNodeParameters().set(Integer.toString(combiner.getInternalNodes().size()), score * expWeight);
       combiner.addChild(scoreNode);
     }
 
