@@ -48,6 +48,9 @@ public class TranslationModelTraversal extends Traversal {
         NodeParameters np = new NodeParameters();
         np.set("default", term);
         Node termCountsNode = new Node("counts", np);
+        TextPartAssigner.assignPart(termCountsNode,
+                retrieval.getGlobalParameters(),
+                retrieval.getAvailableParts());
 
         if (allRelatedTerms.containsKey(term.toLowerCase())) {
           double background = getBackground(termCountsNode);
