@@ -168,10 +168,10 @@ public class FieldedSequentialDependenceTraversal extends MLMTraversal {
 
             Node unorderedBigramScore = new Node(scorerType);
             unorderedBigramScore.getNodeParameters().set("lengths", field);
-            if (scorerType == "dirichlet" && globals.containsKey("mu-" + field)) {
+            if (scorerType.equals("dirichlet") && globals.containsKey("mu-" + field)) {
                 unorderedBigramScore.getNodeParameters().set("mu", globals.getDouble("mu-" + field));
             }
-            if (scorerType == "bm25" && globals.containsKey("smoothing_" + field)) {
+            if (scorerType.equals("bm25") && globals.containsKey("smoothing_" + field)) {
                 unorderedBigramScore.getNodeParameters().set("b", globals.getDouble("smoothing_" + field));
             }
             unorderedBigramScore.addChild(fieldStats.getFieldLenNodes().get(field).clone());
