@@ -80,6 +80,7 @@ public class MLMTraversal extends Traversal {
 
     protected Node getUnigramNode(Node original, Parameters queryParameters, String term) throws Exception {
         String scorerType = queryParameters.get("scorer", globals.get("scorer", "dirichlet"));
+        String fieldCombineOperator = queryParameters.get("fcombop", globals.get("fcombop", "wsum"));
 
         ArrayList<Node> termFields = new ArrayList<Node>();
         NodeParameters nodeweights = new NodeParameters();
@@ -139,7 +140,7 @@ public class MLMTraversal extends Traversal {
             }
         }
 
-        return new Node("wsum", nodeweights, termFields);
+        return new Node(fieldCombineOperator, nodeweights, termFields);
     }
 
     protected class FieldStats {

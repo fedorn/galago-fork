@@ -142,6 +142,7 @@ public class FieldedSequentialDependenceTraversal extends MLMTraversal {
         }
 
         String scorerType = qp.get("scorer", globals.get("scorer", "dirichlet"));
+        String fieldCombineOperator = qp.get("fcombop", globals.get("fcombop", "wsum"));
         List<Node> orderedBigramFields = new ArrayList<Node>();
         List<Node> unorderedBigramFields = new ArrayList<Node>();
         for (String field : fields) {
@@ -179,8 +180,8 @@ public class FieldedSequentialDependenceTraversal extends MLMTraversal {
             unorderedBigramFields.add(unorderedBigramScore);
         }
 
-        Node orderedNode = new Node("wsum", orderedFieldWeights, orderedBigramFields);
-        Node unorderedNode = new Node("wsum", unwindowFieldWeights, unorderedBigramFields);
+        Node orderedNode = new Node(fieldCombineOperator, orderedFieldWeights, orderedBigramFields);
+        Node unorderedNode = new Node(fieldCombineOperator, unwindowFieldWeights, unorderedBigramFields);
         return new BigramNodes(orderedNode, unorderedNode);
     }
 
