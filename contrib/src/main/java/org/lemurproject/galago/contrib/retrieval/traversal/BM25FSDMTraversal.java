@@ -16,31 +16,6 @@ import org.lemurproject.galago.utility.Parameters;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Transforms a #bm25f operator into a full expansion of the BM25F model. That
- * means:
- *
- * Given `meg ryan war`, the output should be like:
- *
- * #bm25fcomb:K=0.5( #combine:0=0.407:1=0.382:2=0.187 (
- * #feature:bm25f:b=0.1(meg.cast) #feature:bm25f:b=0.2(meg.team)
- * #feature:bm25f:b=0.3(meg.title) ) #idf(meg) #combine:0=0.407:1=0.382:2=0.187
- * ( #feature:bm25f:b=0.1(ryan.cast) #feature:bm25f:b=0.2(ryan.team)
- * #feature:bm25f:b=0.3(ryan.title) ) #idf(ryan)
- * #combine:0=0.407:1=0.382:2=0.187 ( #feature:bm25f:b=0.1(war.cast)
- * #feature:bm25f:b=0.2(war.team) #feature:bm25f:b=0.3(war.title) ) #idf(war) )
- *
- * Except the weights involved should be tuned and not made up. Weights are:
- *
- * - b_f : A 'b' that is tuned for that field. It is NOT dependent to a query -
- * only to the field. (attached to feature nodes) - W_f : A weight for each
- * field, that is multiplied against every term for that field, making the total
- * term weight. - K : A field/query independent tunable parameter. Used for
- * smoothing term scores.
- *
- *
- * @author irmarc
- */
 @ImplementsOperator("bm25f")
 public class BM25FSDMTraversal extends Traversal {
 
