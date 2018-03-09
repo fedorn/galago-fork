@@ -157,11 +157,17 @@ public class FieldedSequentialDependenceTraversal extends MLMTraversal {
             }
             Node orderedBigramScore = new Node(scorerType);
             orderedBigramScore.getNodeParameters().set("lengths", field);
-            if (scorerType.equals("dirichlet") && globals.containsKey("mu-" + field)) {
-                orderedBigramScore.getNodeParameters().set("mu", globals.getDouble("mu-" + field));
+            if (scorerType.equals("dirichlet")) {
+                if (qp.containsKey("mu-" + field))
+                    orderedBigramScore.getNodeParameters().set("mu", qp.getDouble("mu-" + field));
+                else if (globals.containsKey("mu-" + field))
+                    orderedBigramScore.getNodeParameters().set("mu", globals.getDouble("mu-" + field));
             }
-            if (scorerType.equals("bm25") && globals.containsKey("smoothing_" + field)) {
-                orderedBigramScore.getNodeParameters().set("b", globals.getDouble("smoothing_" + field));
+            if (scorerType.equals("bm25")) {
+                if (qp.containsKey("smoothing_" + field))
+                    orderedBigramScore.getNodeParameters().set("b", qp.getDouble("smoothing_" + field));
+                else if (globals.containsKey("smoothing_" + field))
+                    orderedBigramScore.getNodeParameters().set("b", globals.getDouble("smoothing_" + field));
             }
             orderedBigramScore.addChild(fieldStats.getFieldLenNodes().get(field).clone());
             orderedBigramScore.addChild(orderedOperationNode);
