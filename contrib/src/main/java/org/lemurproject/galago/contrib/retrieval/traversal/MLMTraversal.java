@@ -121,11 +121,17 @@ public class MLMTraversal extends Traversal {
 
             Node termScore = new Node(scorerType);
             termScore.getNodeParameters().set("lengths", field);
-            if (scorerType.equals("dirichlet") && globals.containsKey("mu-" + field)) {
-                termScore.getNodeParameters().set("mu", globals.getDouble("mu-" + field));
+            if (scorerType.equals("dirichlet")) {
+                if (queryParameters.containsKey("mu-" + field))
+                    termScore.getNodeParameters().set("mu", queryParameters.getDouble("mu-" + field));
+                else if (globals.containsKey("mu-" + field))
+                    termScore.getNodeParameters().set("mu", globals.getDouble("mu-" + field));
             }
-            if (scorerType.equals("bm25") && globals.containsKey("smoothing_" + field)) {
-                termScore.getNodeParameters().set("b", globals.getDouble("smoothing_" + field));
+            if (scorerType.equals("bm25")) {
+                if (queryParameters.containsKey("smoothing_" + field))
+                    termScore.getNodeParameters().set("b", queryParameters.getDouble("smoothing_" + field));
+                else if (globals.containsKey("smoothing_" + field))
+                    termScore.getNodeParameters().set("b", globals.getDouble("smoothing_" + field));
             }
             termScore.addChild(fieldStats.fieldLenNodes.get(field).clone());
             termScore.addChild(termFieldCounts);
