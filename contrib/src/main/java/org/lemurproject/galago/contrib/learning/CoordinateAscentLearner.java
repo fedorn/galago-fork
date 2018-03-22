@@ -263,7 +263,7 @@ public class CoordinateAscentLearner extends Learner {
         // revert changes
         parameterSettings.unsafeSet(coord, currParamValue);
 
-        // Take a step to the right 
+        // Take a step to the left
         step = this.minStepSizes.get(coord);
         if (parameterSettings.get(coord) != 0
                 && step > (Math.abs(parameterSettings.get(coord)))) {
