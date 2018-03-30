@@ -191,7 +191,8 @@ public class BM25FSDMTraversal extends Traversal {
       np.set("pIdx", pos);
       np.set("K", K);
       np.set("idf", idf);
-      np.set("w", cumulativeWeights.get(field, queryParams.get("weight_" + field, weights.get("weight_default", 0.5))));
+      np.set("w", cumulativeWeights.get(field, queryParams.get("uni_weight_" + field, weights.get("uni_weight_default",
+              queryParams.get("weight_" + field, weights.get("weight_default", 0.5))))));
       Node fieldScoreNode = new Node("bm25field", np);
       fieldScoreNode.addChild(fieldTermNode);
       combiner.getNodeParameters().set(Integer.toString(combiner.getInternalNodes().size()),
@@ -203,7 +204,8 @@ public class BM25FSDMTraversal extends Traversal {
   }
 
   private Node createFieldsOfBigram(List<Node> seq, Parameters smoothingWeights,
-                                  Parameters cumulativeWeights, int pos, double K, double idf, Parameters queryParams, boolean ordered) throws Exception {
+                                    Parameters cumulativeWeights, int pos, double K, double idf, Parameters queryParams,
+                                    boolean ordered) throws Exception {
 
     // Use a straight weighting - no weight normalization
     Node combiner = new Node("combine", new ArrayList<Node>());
@@ -239,7 +241,8 @@ public class BM25FSDMTraversal extends Traversal {
       np.set("pIdx", pos);
       np.set("K", K);
       np.set("idf", idf);
-      np.set("w", cumulativeWeights.get(field, queryParams.get("weight_" + field, weights.get("weight_default", 0.5))));
+      np.set("w", cumulativeWeights.get(field, queryParams.get("bi_weight_" + field, weights.get("bi_weight_default",
+              queryParams.get("weight_" + field, weights.get("weight_default", 0.5))))));
       Node fieldScoreNode = new Node("bm25field", np);
       fieldScoreNode.addChild(operationNode);
       combiner.getNodeParameters().set(Integer.toString(combiner.getInternalNodes().size()),
