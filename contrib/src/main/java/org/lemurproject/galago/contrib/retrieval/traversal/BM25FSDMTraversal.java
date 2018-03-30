@@ -19,13 +19,9 @@ import java.util.List;
 @ImplementsOperator("bm25f")
 public class BM25FSDMTraversal extends Traversal {
 
-  List<String> fieldList;
-  Parameters availableFields, weights;
+  private List<String> fieldList;
+  private Parameters availableFields;
   Retrieval retrieval;
-
-  public static final String UNIGRAM_FIELD_PREFIX = "uni-";
-  public static final String ORDERED_FIELD_PREFIX = "od-";
-  public static final String UNWINDOW_FIELD_PREFIX = "uww-";
 
   private final int windowLimitDefault;
   private final double unigramDefault;
@@ -41,18 +37,17 @@ public class BM25FSDMTraversal extends Traversal {
   public BM25FSDMTraversal(Retrieval retrieval) {
     this.retrieval = retrieval;
     Parameters globals = retrieval.getGlobalParameters();
-    weights = globals.containsKey("bm25f") ? globals.getMap("bm25f") : Parameters.create();
     fieldList = globals.getAsList("fields", String.class);
     unigramDefault = globals.get("uniw", 0.8);
     orderedDefault = globals.get("odw", 0.1);
     unorderedDefault = globals.get("uww", 0.1);
-    windowLimitDefault = (int) globals.get("windowLimit", 2);
+    windowLimitDefault = globals.get("windowLimit", 2);
 
     odOp = globals.get("sdm.od.op", "ordered");
-    odWidth = (int) globals.get("sdm.od.width", 1);
+    odWidth = globals.get("sdm.od.width", 1);
 
     uwOp = globals.get("sdm.uw.op", "unordered");
-    uwWidth = (int) globals.get("sdm.uw.width", 8);
+    uwWidth = globals.get("sdm.uw.width", 8);
 
     try {
       availableFields = retrieval.getAvailableParts();
@@ -68,9 +63,7 @@ public class BM25FSDMTraversal extends Traversal {
     if (original.getOperator().equals("bm25fsdm")) {
       // Create the replacing root
       NodeParameters rootP = new NodeParameters();
-      rootP.set("K", weights.get("K", queryParams.get("K", 0.5)));
-      Parameters cumulativeWeights = weights.get("weights", Parameters.create());
-      Parameters smoothing = weights.get("smoothing", Parameters.create());
+      rootP.set("K", queryParams.get("K", 0.5));
       Node uniRoot = new Node("bm25fcomb", rootP);
       uniRoot.getNodeParameters().set("norm", false);
       // Now generate the field-based subtrees for all extent/count nodes
@@ -80,8 +73,7 @@ public class BM25FSDMTraversal extends Traversal {
       for (int i = 0; i < children.size(); i++) {
         Node termNode = children.get(i);
         double idf = getIDF(termNode);
-        Node termCombiner = createFieldsOfTerm(termNode, smoothing, cumulativeWeights, i, weights.get("K", queryParams.get("K", 0.5)),
-                idf, queryParams);
+        Node termCombiner = createFieldsOfTerm(termNode, i, queryParams.get("K", 0.5), idf, queryParams);
         uniRoot.addChild(termCombiner);
         uniRoot.getNodeParameters().set("idf" + i, idf);
       }
@@ -90,15 +82,15 @@ public class BM25FSDMTraversal extends Traversal {
         return uniRoot;
       }
 
-      int windowLimit = (int) queryParams.get("windowLimit", windowLimitDefault);
+      int windowLimit = queryParams.get("windowLimit", windowLimitDefault);
 
       rootP = new NodeParameters();
-      rootP.set("K", weights.get("K", queryParams.get("K", 0.5)));
+      rootP.set("K", queryParams.get("K", 0.5));
       Node odRoot = new Node("bm25fcomb", rootP);
       odRoot.getNodeParameters().set("norm", false);
 
       rootP = new NodeParameters();
-      rootP.set("K", weights.get("K", queryParams.get("K", 0.5)));
+      rootP.set("K", queryParams.get("K", 0.5));
       Node uwRoot = new Node("bm25fcomb", rootP);
       uwRoot.getNodeParameters().set("norm", false);
 
@@ -106,19 +98,15 @@ public class BM25FSDMTraversal extends Traversal {
       for (int n = 2; n <= windowLimit; n++) {
         for (int i = 0; i < (children.size() - n + 1); i++) {
           List<Node> seq = children.subList(i, i + n);
-          String orderedOp = this.odOp;
-          String unorderedOp = this.uwOp;
 
-          Node odNode = new Node(queryParams.get("sdm.od.op", orderedOp), new NodeParameters(queryParams.get("sdm.od.width", odWidth)), Node.cloneNodeList(seq));
-          Node uwwNode = new Node(queryParams.get("sdm.uw.op", unorderedOp), new NodeParameters(queryParams.get("sdm.uw.width", uwWidth)), Node.cloneNodeList(seq));
+          Node odNode = new Node(queryParams.get("sdm.od.op", this.odOp), new NodeParameters(queryParams.get("sdm.od.width", odWidth)), Node.cloneNodeList(seq));
+          Node uwwNode = new Node(queryParams.get("sdm.uw.op", this.uwOp), new NodeParameters(queryParams.get("sdm.uw.width", uwWidth)), Node.cloneNodeList(seq));
 
           double odIdf = getIDF(odNode);
           double uwwIdf = getIDF(uwwNode);
 
-          Node odCombiner = createFieldsOfBigram(seq, smoothing, cumulativeWeights, i, weights.get("K", queryParams.get("K", 0.5)),
-                  odIdf, queryParams, true);
-          Node uwwCombiner = createFieldsOfBigram(seq, smoothing, cumulativeWeights, i, weights.get("K", queryParams.get("K", 0.5)),
-                  uwwIdf, queryParams, false);
+          Node odCombiner = createFieldsOfBigram(seq, i, queryParams.get("K", 0.5), odIdf, queryParams, true);
+          Node uwwCombiner = createFieldsOfBigram(seq, i, queryParams.get("K", 0.5), uwwIdf, queryParams, false);
 
 
           odRoot.addChild(odCombiner);
@@ -169,8 +157,7 @@ public class BM25FSDMTraversal extends Traversal {
     return Math.log(documentCount / (df + 0.5));
   }
 
-  private Node createFieldsOfTerm(Node termNode, Parameters smoothingWeights,
-          Parameters cumulativeWeights, int pos, double K, double idf, Parameters queryParams) throws Exception {
+  private Node createFieldsOfTerm(Node termNode, int pos, double K, double idf, Parameters queryParams) throws Exception {
     String term = termNode.getDefaultParameter();
 
     // Use a straight weighting - no weight normalization
@@ -186,25 +173,23 @@ public class BM25FSDMTraversal extends Traversal {
 
       // Now wrap it in the scorer
       np = new NodeParameters();
-      np.set("b", smoothingWeights.get(field, queryParams.get("smoothing_" + field, weights.get("smoothing_default", 0.5))));
+      np.set("b", queryParams.get("smoothing_" + field, 0.5));
       np.set("lengths", field);
       np.set("pIdx", pos);
       np.set("K", K);
       np.set("idf", idf);
-      np.set("w", cumulativeWeights.get(field, queryParams.get("uni_weight_" + field, weights.get("uni_weight_default",
-              queryParams.get("weight_" + field, weights.get("weight_default", 0.5))))));
+      double fieldWeight = queryParams.get("uni_weight_" + field, queryParams.get("weight_" + field, 0.5));
+      np.set("w", fieldWeight);
       Node fieldScoreNode = new Node("bm25field", np);
       fieldScoreNode.addChild(fieldTermNode);
-      combiner.getNodeParameters().set(Integer.toString(combiner.getInternalNodes().size()),
-              cumulativeWeights.get(field, queryParams.get("weight_" + field, weights.get("weight_default", 0.5))));
+      combiner.getNodeParameters().set(Integer.toString(combiner.getInternalNodes().size()), fieldWeight);
       combiner.addChild(fieldScoreNode);
     }
 
     return combiner;
   }
 
-  private Node createFieldsOfBigram(List<Node> seq, Parameters smoothingWeights,
-                                    Parameters cumulativeWeights, int pos, double K, double idf, Parameters queryParams,
+  private Node createFieldsOfBigram(List<Node> seq, int pos, double K, double idf, Parameters queryParams,
                                     boolean ordered) throws Exception {
 
     // Use a straight weighting - no weight normalization
@@ -228,25 +213,24 @@ public class BM25FSDMTraversal extends Traversal {
         String inFieldTerm = t.getNodeParameters().getAsSimpleString("default");
         if (NumberUtils.isNumber(inFieldTerm)) inFieldTerm = "@/" + inFieldTerm + "/";
         if (ordered)
-         operationNode.addChild(TextPartAssigner.assignFieldPart(StructuredQuery.parse("#extents:" + inFieldTerm + "()"), this.retrieval.getAvailableParts(), field));
+         operationNode.addChild(TextPartAssigner.assignFieldPart(StructuredQuery.parse("#extents:" + inFieldTerm + "()"), availableFields, field));
         else
-         operationNode.addChild(TextPartAssigner.assignFieldPart(StructuredQuery.parse("#extents:" + inFieldTerm + "()"), this.retrieval.getAvailableParts(), field));
+         operationNode.addChild(TextPartAssigner.assignFieldPart(StructuredQuery.parse("#extents:" + inFieldTerm + "()"), availableFields, field));
       }
 
 
       // Now wrap it in the scorer
       np = new NodeParameters();
-      np.set("b", smoothingWeights.get(field, queryParams.get("smoothing_" + field, weights.get("smoothing_default", 0.5))));
+      np.set("b", queryParams.get("smoothing_" + field, 0.5));
       np.set("lengths", field);
       np.set("pIdx", pos);
       np.set("K", K);
       np.set("idf", idf);
-      np.set("w", cumulativeWeights.get(field, queryParams.get("bi_weight_" + field, weights.get("bi_weight_default",
-              queryParams.get("weight_" + field, weights.get("weight_default", 0.5))))));
+      double fieldWeight = queryParams.get("bi_weight_" + field, queryParams.get("weight_" + field, 0.5));
+      np.set("w", fieldWeight);
       Node fieldScoreNode = new Node("bm25field", np);
       fieldScoreNode.addChild(operationNode);
-      combiner.getNodeParameters().set(Integer.toString(combiner.getInternalNodes().size()),
-              cumulativeWeights.get(field, queryParams.get("weight_" + field, weights.get("weight_default", 0.5))));
+      combiner.getNodeParameters().set(Integer.toString(combiner.getInternalNodes().size()), fieldWeight);
       combiner.addChild(fieldScoreNode);
     }
 
