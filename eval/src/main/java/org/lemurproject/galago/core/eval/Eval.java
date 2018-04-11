@@ -262,7 +262,7 @@ public class Eval extends AppFunction {
       String summaryFormatString = "%1s%2$10." + prec + "f%3$3s";
 
       for (String runId : runs) {
-        output.format("%1$-30s", runId);
+        output.format("%1$-40s", runId);
         Parameters r = eval.getMap("all").getMap(runId);
         for (String metric : metrics) {
           if (comparisons.size() > 0
