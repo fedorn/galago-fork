@@ -26,10 +26,11 @@ public class TranslationModelTraversal extends Traversal {
   private static final Logger logger = Logger.getLogger("TranslationModel");
   Parameters allRelatedTerms;
   Retrieval retrieval;
+  Parameters globals;
 
   public TranslationModelTraversal(Retrieval retrieval) {
     this.retrieval = retrieval;
-    Parameters globals = retrieval.getGlobalParameters();
+    globals = retrieval.getGlobalParameters();
     allRelatedTerms = globals.getMap("transprobs");
   }
 
@@ -55,7 +56,7 @@ public class TranslationModelTraversal extends Traversal {
         if (allRelatedTerms.containsKey(term.toLowerCase())) {
           double background = getBackground(termCountsNode);
           Node termCombiner = createExpansionOfTerm(termCountsNode, allRelatedTerms.getList(term.toLowerCase(), List.class),
-                  background, queryParams.getDouble("expWeight"));
+                  background, queryParams.get("expWeight", globals.getDouble("expWeight")));
           newRoot.addChild(termCombiner);
         } else {
           logger.info("no expansion terms for: " + term);
