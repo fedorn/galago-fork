@@ -24,7 +24,7 @@ import java.util.logging.Logger;
  * @author fedorn
  */
 
-@ImplementsOperator("tm")
+@ImplementsOperator("tmmlm")
 public class TranslationModelMLMTraversal extends Traversal {
   public static final String UNIGRAM_FIELD_PREFIX = "uni-";
 
