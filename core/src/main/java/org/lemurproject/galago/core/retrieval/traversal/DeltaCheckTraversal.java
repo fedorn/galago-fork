@@ -4,10 +4,7 @@
 package org.lemurproject.galago.core.retrieval.traversal;
 
 import org.lemurproject.galago.core.retrieval.Retrieval;
-import org.lemurproject.galago.core.retrieval.iterator.DeltaScoringIterator;
-import org.lemurproject.galago.core.retrieval.iterator.ScoreIterator;
-import org.lemurproject.galago.core.retrieval.iterator.DisjunctionIterator;
-import org.lemurproject.galago.core.retrieval.iterator.FilteredIterator;
+import org.lemurproject.galago.core.retrieval.iterator.*;
 import org.lemurproject.galago.core.retrieval.query.Node;
 import org.lemurproject.galago.core.retrieval.query.NodeParameters;
 import org.lemurproject.galago.core.retrieval.query.NodeType;
@@ -69,6 +66,11 @@ public class DeltaCheckTraversal extends Traversal {
 
     // Filters, currently, will not work (candidate checking skips them)
     if (FilteredIterator.class.isAssignableFrom(iteratorClass)) {
+      return false;
+    }
+
+    // Weighted sum, currently, will not work
+    if (WeightedSumIterator.class.isAssignableFrom(iteratorClass)) {
       return false;
     }
 
