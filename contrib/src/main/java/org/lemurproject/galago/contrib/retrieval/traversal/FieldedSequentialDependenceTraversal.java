@@ -108,19 +108,21 @@ public class FieldedSequentialDependenceTraversal extends MLMTraversal {
         NodeParameters unwindowFieldWeights = new NodeParameters();
         double uwwNormalizer = 0.0;
         for (int i = 0; i < fields.size(); i++) {
-            double odFieldWeight = 0.0;
-            double uwdFieldWeight = 0.0;
+            double odFieldWeight;
+            double uwdFieldWeight;
             if (this.fieldWeights != null && this.fieldWeights.containsKey(ORDERED_FIELD_PREFIX + fields.get(i))) {
                 odFieldWeight = this.fieldWeights.getDouble(ORDERED_FIELD_PREFIX + fields.get(i));
+            } else if (qp.containsKey(ORDERED_FIELD_PREFIX + fields.get(i))) {
+                odFieldWeight = qp.getDouble(ORDERED_FIELD_PREFIX + fields.get(i));
             } else {
-                //odFieldWeight = qp.get(ORDERED_FIELD_PREFIX + fields.get(i), 0.0);
-		odFieldWeight = qp.get(ORDERED_FIELD_PREFIX + fields.get(i), 1.0);
+                odFieldWeight = globals.getDouble(ORDERED_FIELD_PREFIX + fields.get(i));
             }
             if (this.fieldWeights != null && this.fieldWeights.containsKey(UNWINDOW_FIELD_PREFIX + fields.get(i))) {
                 uwdFieldWeight = this.fieldWeights.getDouble(UNWINDOW_FIELD_PREFIX + fields.get(i));
+            } else if (qp.containsKey(UNWINDOW_FIELD_PREFIX + fields.get(i))) {
+                uwdFieldWeight = qp.getDouble(UNWINDOW_FIELD_PREFIX + fields.get(i));
             } else {
-                //uwdFieldWeight = qp.get(UNWINDOW_FIELD_PREFIX + fields.get(i), 0.0);
-		uwdFieldWeight = qp.get(UNWINDOW_FIELD_PREFIX + fields.get(i), 1.0);
+                uwdFieldWeight = globals.getDouble(UNWINDOW_FIELD_PREFIX + fields.get(i));
             }
             orderedFieldWeights.set(Integer.toString(i), odFieldWeight);
             odNormalizer += odFieldWeight;
