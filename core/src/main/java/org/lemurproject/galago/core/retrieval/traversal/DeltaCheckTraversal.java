@@ -41,12 +41,12 @@ public class DeltaCheckTraversal extends Traversal {
     if (isDeltaCapable(original)) {
       // ensure the correct processing model can be used
       qp.set("deltaReady", true);
-
-      // now add w parameters to each node
-      propagateWeights(original, qp);
     } else {
       qp.set("deltaReady", false);
     }
+
+    // now add w parameters to each node
+    propagateWeights(original, qp);
 
     return original;
   }

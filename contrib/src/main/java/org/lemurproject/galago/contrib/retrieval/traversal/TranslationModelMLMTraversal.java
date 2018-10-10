@@ -102,6 +102,7 @@ public class TranslationModelMLMTraversal extends Traversal {
           newRoot.addChild(getUnigramNode(queryParams, term));
         }
       }
+      newRoot.getNodeParameters().set("norm", false);
       return newRoot;
     } else {
       return original;
