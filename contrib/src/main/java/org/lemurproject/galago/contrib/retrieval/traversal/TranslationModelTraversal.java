@@ -100,7 +100,7 @@ public class TranslationModelTraversal extends Traversal {
     combiner.getNodeParameters().set("0", 1.0);
     combiner.addChild(scoreNode);
 
-    for (List termPair : relatedTerms) {
+    for (List termPair : relatedTerms.subList(0, Math.min(1000, relatedTerms.size()))) {
       String relatedTerm = (String) termPair.get(0);
       double score = (double) termPair.get(1);
 
