@@ -103,7 +103,7 @@ public class NormalizedDiscountedCumulativeGain extends QueryEvaluator {
    * Computes dcg @ documentsRetrieved
    *  
    */
-  private double computeDCG(double[] gains) {
+  protected double computeDCG(double[] gains) {
     double dcg = 0.0;
     for (int i = 0; i < Math.min(gains.length, this.documentsRetrieved); i++) {
       dcg += (Math.pow(2, gains[i]) - 1.0) / Math.log(i + 2);

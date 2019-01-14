@@ -59,10 +59,12 @@ public class FeatureFactory {
     {ScoreCombinationIterator.class.getName(), "rm"},
     {ScoreCombinationIterator.class.getName(), "bm25rf"},
     {BM25FCombinationIterator.class.getName(), "bm25fcomb"},
-    {BM25FCombinationIterator.class.getName(), "bm25fcomb"},
     {LogProbNotIterator.class.getName(), "logprobnot"},
+    {OrigBM25FCombinationIterator.class.getName(), "origbm25fcomb"},
+    {OrigBM25FFieldCombinationIterator.class.getName(), "origbm25ffieldcombine"},
+    {TranslationModelCombinationIterator.class.getName(), "tmtermcombine"},
 
-    // count -> score iterators
+          // count -> score iterators
     // Scorers can be named directly as nodes
     {DirichletScoringIterator.class.getName(), "dirichlet"},
     {JelinekMercerScoringIterator.class.getName(), "linear"},
@@ -76,6 +78,8 @@ public class FeatureFactory {
     {InL2ScoringIterator.class.getName(), "inl2"},
     {BiL2ScoringIterator.class.getName(), "bil2"},
     {LogCountIterator.class.getName(), "log-count"},
+    {OrigBM25FieldScoringIterator.class.getName(), "origbm25field"},
+    {OrigBM25FLengthScoringIterator.class.getName(), "origbm25flength"},
 
     // indicator iterators
     {UniversalIndicatorIterator.class.getName(), "all"},

@@ -44,6 +44,7 @@ public class QuerySetEvaluatorFactory {
             || lowerMetric.equals("rPrecision")
             || lowerMetric.equals("recip_rank")
             || lowerMetric.startsWith("ndcg")
+            || lowerMetric.startsWith("linndcg")
             || lowerMetric.startsWith("err")
             || lowerMetric.startsWith("p")
             || lowerMetric.startsWith("r")

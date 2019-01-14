@@ -47,6 +47,8 @@ public class QueryEvaluatorFactory {
         return new Recall(metric);
       case "ndcg":
         return new NormalizedDiscountedCumulativeGain(metric);
+      case "linndcg":
+        return new LinearNormalizedDiscountedCumulativeGain(metric);
       case "err":
         return new ExpectedReciprocalRank(metric);
     }
@@ -62,6 +64,9 @@ public class QueryEvaluatorFactory {
     } else if (lowerMetric.startsWith("ndcg")) {
       int documentLimit = Integer.parseInt(lowerMetric.replace("ndcg", ""));
       return new NormalizedDiscountedCumulativeGain(metric, documentLimit);
+    } else if (lowerMetric.startsWith("linndcg")) {
+      int documentLimit = Integer.parseInt(lowerMetric.replace("linndcg", ""));
+      return new LinearNormalizedDiscountedCumulativeGain(metric, documentLimit);
     } else if (lowerMetric.startsWith("err")) {
       int documentLimit = Integer.parseInt(lowerMetric.replace("err", ""));
       return new ExpectedReciprocalRank(metric, documentLimit);
