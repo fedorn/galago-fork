@@ -21,6 +21,8 @@ public class LearnerFactory {
     learnerLookup.put("coord", CoordinateAscentLearner.class);
     learnerLookup.put("grid", GridSearchLearner.class);
     learnerLookup.put("xfold", XFoldLearner.class);
+    learnerLookup.put("nedlermead", NedlerMeadLearner.class);
+    learnerLookup.put("annealing", SimulatedAnnealing.class);
     // otherwise by default use coordinate ascent
     learnerLookup.put("default", CoordinateAscentLearner.class);
   }

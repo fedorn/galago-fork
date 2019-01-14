@@ -56,6 +56,8 @@ public abstract class Learner {
   protected File outputFolder;
   protected final PrintStream outputPrintStream;
   protected final PrintStream outputTraceStream;
+  // for testing learner with simple function
+  protected boolean testing;
 
   public Learner(Parameters p, Retrieval r) throws Exception {
     logger = Logger.getLogger(this.getClass().getName());
@@ -158,6 +160,8 @@ public abstract class Learner {
       ensureCachedQueryNodes(retrieval);
       outputTraceStream.println("Done. Caching query nodes");
     }
+
+    testing = p.get("testing", false);
   }
 
   /**
@@ -177,20 +181,6 @@ public abstract class Learner {
   }
 
   /**
-   * generateRandomInitalValues
-   */
-  protected RetrievalModelInstance generateRandomInitalValues() {
-    Parameters init = Parameters.create();
-    for (String p : this.learnableParameters.getParams()) {
-      double val = random.nextDouble();
-      val *= this.learnableParameters.getRange(p);
-      val += this.learnableParameters.getMin(p);
-      init.set(p, val);
-    }
-    return new RetrievalModelInstance(learnableParameters, init);
-  }
-
-  /**
    * Applies new parameter settings to each query, runs the query, evaluates the
    * scored document results
    *
@@ -198,6 +188,19 @@ public abstract class Learner {
    *
    */
   protected double evaluate(RetrievalModelInstance instance) throws Exception {
+
+    if (testing) {
+      instance.normalize();
+      double sum = 0.0;
+      for (String param : learnableParameters.getParams()) {
+        double paramValue = instance.get(param);
+        double distToMiddle = (paramValue - (learnableParameters.getMax(param) + learnableParameters.getMin(param)) / 2);
+        sum += distToMiddle * distToMiddle;
+      }
+
+      return -sum;
+    }
+
     // check cache for previous evaluation
 
     String settingString = instance.toString();
@@ -247,6 +250,20 @@ public abstract class Learner {
     // store score in cache for future reference
     testedParameters.put(settingString, r);
     return r;
+  }
+
+  /**
+   * generateRandomInitalValues
+   */
+  protected RetrievalModelInstance generateRandomInitalValues() {
+    Parameters init = Parameters.create();
+    for (String p : this.learnableParameters.getParams()) {
+      double val = random.nextDouble();
+      val *= this.learnableParameters.getRange(p);
+      val += this.learnableParameters.getMin(p);
+      init.set(p, val);
+    }
+    return new RetrievalModelInstance(learnableParameters, init);
   }
 
   /**

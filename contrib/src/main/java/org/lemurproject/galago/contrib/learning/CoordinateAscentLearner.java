@@ -263,7 +263,7 @@ public class CoordinateAscentLearner extends Learner {
         // revert changes
         parameterSettings.unsafeSet(coord, currParamValue);
 
-        // Take a step to the right 
+        // Take a step to the left
         step = this.minStepSizes.get(coord);
         if (parameterSettings.get(coord) != 0
                 && step > (Math.abs(parameterSettings.get(coord)))) {
@@ -322,14 +322,14 @@ public class CoordinateAscentLearner extends Learner {
         parameterSettings.unsafeSet(coord, currParamValue);
 
         // pick a direction to move this parameter
-        if ((rightBest > leftBest && rightBest > best) || rightBest > best) {
+        if (rightBest > leftBest && rightBest > best) {
           optimized = true;
           parameterSettings.unsafeSet(coord, currParamValue + rightStep);
           best = rightBest;
           outputTraceStream.println(String.format("Finished optimizing coordinate (%s). (%f ++%f). Metric: %f", coord, currParamValue, rightStep, best));
           outputTraceStream.flush();
 
-        } else if ((leftBest > rightBest && leftBest > best) || leftBest > best) {
+        } else if (leftBest > rightBest && leftBest > best) {
           optimized = true;
           parameterSettings.unsafeSet(coord, currParamValue - leftStep);
           best = leftBest;

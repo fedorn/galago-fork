@@ -80,6 +80,7 @@ public class MLMTraversal extends Traversal {
 
     protected Node getUnigramNode(Node original, Parameters queryParameters, String term) throws Exception {
         String scorerType = queryParameters.get("scorer", globals.get("scorer", "dirichlet"));
+        String fieldCombineOperator = queryParameters.get("fcombop", globals.get("fcombop", "wsum"));
 
         ArrayList<Node> termFields = new ArrayList<Node>();
         NodeParameters nodeweights = new NodeParameters();
@@ -111,15 +112,28 @@ public class MLMTraversal extends Traversal {
             double fieldWeight = 0.0;
             if (fieldWeights != null && fieldWeights.containsKey(UNIGRAM_FIELD_PREFIX + field)) {
                 fieldWeight = fieldWeights.getDouble(UNIGRAM_FIELD_PREFIX + field);
+            } else if (queryParameters.containsKey(UNIGRAM_FIELD_PREFIX + field)) {
+                fieldWeight = queryParameters.getDouble(UNIGRAM_FIELD_PREFIX + field);
             } else {
-                //fieldWeight = queryParameters.get(UNIGRAM_FIELD_PREFIX + field, 0.0);
-		fieldWeight = queryParameters.get(UNIGRAM_FIELD_PREFIX + field, 1.0);
+                fieldWeight = globals.getDouble(UNIGRAM_FIELD_PREFIX + field);
             }
             nodeweights.set(Integer.toString(i), fieldWeight);
             normalizer += fieldWeight;
 
             Node termScore = new Node(scorerType);
             termScore.getNodeParameters().set("lengths", field);
+            if (scorerType.equals("dirichlet")) {
+                if (queryParameters.containsKey("mu-" + field))
+                    termScore.getNodeParameters().set("mu", queryParameters.getDouble("mu-" + field));
+                else if (globals.containsKey("mu-" + field))
+                    termScore.getNodeParameters().set("mu", globals.getDouble("mu-" + field));
+            }
+            if (scorerType.equals("bm25")) {
+                if (queryParameters.containsKey("smoothing_" + field))
+                    termScore.getNodeParameters().set("b", queryParameters.getDouble("smoothing_" + field));
+                else if (globals.containsKey("smoothing_" + field))
+                    termScore.getNodeParameters().set("b", globals.getDouble("smoothing_" + field));
+            }
             termScore.addChild(fieldStats.fieldLenNodes.get(field).clone());
             termScore.addChild(termFieldCounts);
             termFields.add(termScore);
@@ -133,7 +147,7 @@ public class MLMTraversal extends Traversal {
             }
         }
 
-        return new Node("wsum", nodeweights, termFields);
+        return new Node(fieldCombineOperator, nodeweights, termFields);
     }
 
     protected class FieldStats {

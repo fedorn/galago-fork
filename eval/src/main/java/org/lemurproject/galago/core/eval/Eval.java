@@ -215,7 +215,7 @@ public class Eval extends AppFunction {
     String ln = p.get("ln", " ");     // latex : " \\\\ \\hline"
     String sig = p.get("sig", "*");   // latex : " ^{+} "
     String neg = p.get("negsig", ""); // latex : " ^{-} "
-    String prec = p.get("precision", "3");
+    String prec = Integer.toString(p.get("precision", 4));
 
     double thresh = p.get("thresh", 0.05);
 
@@ -262,7 +262,7 @@ public class Eval extends AppFunction {
       String summaryFormatString = "%1s%2$10." + prec + "f%3$3s";
 
       for (String runId : runs) {
-        output.format("%1$-30s", runId);
+        output.format("%1$-40s", runId);
         Parameters r = eval.getMap("all").getMap(runId);
         for (String metric : metrics) {
           if (comparisons.size() > 0

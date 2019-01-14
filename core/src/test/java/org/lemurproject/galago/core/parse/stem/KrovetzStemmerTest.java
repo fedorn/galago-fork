@@ -139,4 +139,13 @@ public class KrovetzStemmerTest {
       }
     }
   }
+
+  @Test
+  public void testLowerCase() {
+
+    Stemmer stemmer = new KrovetzStemmer();
+    assertEquals("cat", stemmer.stemTerm("cats"));
+    assertEquals("cat", stemmer.stemTerm("Cats"));
+
+  }
 }
