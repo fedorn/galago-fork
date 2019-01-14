@@ -1,7 +1,7 @@
 // BSD License (http://www.galagosearch.org/license)
 package org.lemurproject.galago.contrib.retrieval.traversal;
 
-import org.apache.commons.lang.math.NumberUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.lemurproject.galago.core.index.stats.FieldStatistics;
 import org.lemurproject.galago.core.index.stats.NodeStatistics;
 import org.lemurproject.galago.core.retrieval.Retrieval;
