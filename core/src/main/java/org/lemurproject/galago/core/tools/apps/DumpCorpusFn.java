@@ -14,7 +14,6 @@ import java.io.PrintStream;
 import java.util.Map;
 
 /**
- *
  * @author sjh
  */
 public class DumpCorpusFn extends AppFunction {
@@ -26,10 +25,8 @@ public class DumpCorpusFn extends AppFunction {
 
   @Override
   public String getHelpString() {
-    return "galago dump-corpus --path=<corpus> [limit fields]\n\n"
-            + " Dumps all documents from a corpus file to stdout.\n"
-            + " Limits (all boolean) include:\n pseudo tags terms metadata"
-            + " text\n";
+    return "galago dump-corpus --path=<corpus>\n\n"
+            + " Dumps all documents from a corpus file to stdout.\n";
   }
 
   @Override
@@ -41,7 +38,7 @@ public class DumpCorpusFn extends AppFunction {
     }
 
     DocumentReader.DocumentIterator iterator = reader.getIterator();
-    DocumentComponents dc = new DocumentComponents(p);
+    DocumentComponents dc = new DocumentComponents();
     
     while (!iterator.isDone()) {
       output.println("#IDENTIFIER: " + iterator.getKeyString());
