@@ -1,4 +1,5 @@
-before_install: ./scripts/installlib.sh
 language: java
+install:
+  - mvn package -Ddependency-check.skip=true
 jdk:
   - oraclejdk8
